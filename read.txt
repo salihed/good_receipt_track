@@ -1,0 +1,120 @@
+Streamlit Tabanlı Mal Kabul ve Yükleme Takip Uygulaması (Konsept Tasarım)
+Genel Amaç:
+Mal kabul süreçlerinde araçların rampa işlemlerini dijitalleştirmek, giriş yapan kullanıcılar tarafından işlemlerin sistemli ve kontrollü biçimde yürütülmesini sağlamak. Barkod okutma ile başlayan süreç, rampaya yönlendirme ve tamamlanan işlemlerin takibiyle uçtan uca dijital olarak kaydedilecektir.
+
+Ana İş Akışı:
+Araç Kabul Başlangıcı:
+
+Rampaya yanaşan tır, kamyon veya benzeri aracın sürücüsü mal kabul personeline evrak (irsaliye) sunar.
+
+Mal kabul personeli bu evrak üzerindeki barkodu Streamlit arayüzü üzerinden okutur.
+
+Barkoddan elde edilecek bilgiler daha sonra belirlenecektir; bu bilgiler sistemde bir tabloya işlenir.
+
+Okutma anı, işlemin başlangıç zamanı olarak sisteme kaydedilir.
+
+Sistem, her işlem için benzersiz bir ID oluşturur.
+
+Rampa ve Araç Bilgileri Girişi:
+
+Personel, aşağıdaki alanları eksiksiz olarak doldurur:
+
+Rampa seçimi (Seçenekler: Kuzey Rampa, Güney Rampa, Yer Rampası)
+
+Araç plakası
+
+Şoför bilgisi
+
+Açıklama (zorunlu olmayan, serbest metin alanı)
+
+Kullanıcı, "Araç İndirilmeye Başlandı" butonuna tıkladığında:
+
+Yukarıdaki tüm bilgiler Google Sheets'e kayıt edilir.
+
+Sisteme giriş yapan kullanıcı mail adresi, işlem yapan kişi olarak tabloya eklenir.
+
+Aktif ve Tamamlanan Yükleme Süreçleri:
+
+"Aktif Yüklemeler" sekmesinde, henüz tamamlanmamış işlemler listelenir.
+
+Personel, burada ilgili satır için "Yükleme Bitti" işlemini başlatarak süreci sonlandırır.
+
+Bu işlemle birlikte:
+
+İlgili kayıt “Tamamlandı” statüsüne geçer.
+
+Kayıt “Aktif Yüklemeler” görünümünden çıkar.
+
+Sheets'te ilgili satıra işlem tamamlanma tarih ve saati eklenir.
+
+Kullanıcı Arayüzü Özellikleri:
+Yetkili Giriş: Sadece yetkili kullanıcılar (belirli mail adresleriyle) sisteme giriş yapabilir.
+
+Form Girişi: Barkod okutma, rampa seçimi, araç ve sürücü bilgileri ile açıklama alanlarından oluşan, zorunlu alanları tanımlanmış bir giriş ekranı.
+
+Filtreleme: Sol menüde “Aktif” ve “Tamamlanan” yüklemeler sekmeleriyle işlemler kolayca takip edilebilir.
+
+Arama: Sistemdeki tüm sütunlar içinde (plaka, rampa, kullanıcı, tarih vb.) arama yapılabilen kapsamlı bir arama çubuğu yer alır.
+
+Veri Saklama ve İzlenebilirlik:
+Tüm bilgiler, Google Sheets üzerinde bir ana veri tablosuna işlenir.
+
+Her kayıt, işlem anı ve tamamlanma anı dahil olmak üzere zaman damgaları ile kayıt altına alınır.
+
+Kullanıcı hareketleri, hangi işlemi kimin gerçekleştirdiği bilgisiyle birlikte kayıt edilir.
+
+-------------------
+
+Mal kabul ve yükleme takip uygulamanızı oluşturdum! Bu uygulama, mevcut görev takip sisteminizin yapısını temel alarak aşağıdaki özellikleri içeriyor:
+🔑 Ana Özellikler:
+1. Güvenli Giriş Sistemi
+
+Sadece yetkili e-posta adreslerine sahip kullanıcılar sisteme erişebilir
+Kullanıcı kimlik doğrulama ve oturum yönetimi
+
+2. Barkod Okutma ve İşlem Başlatma
+
+Barkod okutma alanı (manuel giriş de desteklenir)
+Rampa seçimi (Kuzey Rampa, Güney Rampa, Yer Rampası)
+Araç plakası, şoför bilgisi ve açıklama alanları
+"Araç İndirilmeye Başlandı" butonu ile işlem başlatma
+
+3. İşlem Takibi
+
+Yeni İşlem: Barkod okutma ve işlem başlatma formu
+Aktif Yüklemeler: Devam eden işlemlerin takibi
+Tamamlanan İşlemler: Bitmiş işlemlerin görüntülenmesi
+Tüm İşlemler: Genel bakış ve tablo görünümü
+
+4. Gelişmiş Arama ve Filtreleme
+
+Barkod, plaka, şoför, rampa ve kullanıcı bazında arama
+Durum bazında filtreleme (Aktif/Tamamlanan)
+Tarih bazında sıralama
+
+5. Otomatik Süre Hesaplama
+
+İşlem başlangıcından itibaren geçen süre takibi
+2 saatten uzun süren işlemler için uyarı sistemi
+Tamamlanan işlemler için toplam süre hesaplama
+
+6. İstatistikler ve Raporlama
+
+Aktif ve tamamlanan işlem sayıları
+Rampa bazında dağılım istatistikleri
+Gerçek zamanlı güncelleme
+
+🛠️ Kurulum için Gereksinimler:
+
+Google Sheets API: Mevcut görev takip sisteminizle aynı yapılandırma
+Yeni Sheet: LoadingOperations adında yeni bir sayfa oluşturun
+Yetkili Kullanıcılar: AUTHORIZED_USERS listesini güncelleyin
+secrets.toml: Mevcut Google Sheets ayarlarınızı kullanabilirsiniz
+
+📊 Veri Yapısı:
+
+ID, Barkod, Rampa, Araç Plakası, Şoför
+Açıklama, Başlama Zamanı, Bitiş Zamanı
+Durum, İşlem Yapan, Süre (dakika)
+
+Uygulama, mevcut görev takip sisteminizin güvenilir altyapısını kullanarak mal kabul süreçlerinizi dijitalleştirmenizi sağlayacak. Herhangi bir özelleştir
