@@ -387,7 +387,7 @@ def read_sheet(range_):
 
 def get_required_columns():
     return [
-        "ID", "Barkod", "Rampa", "Araç Plakası", "Şoför", "Açıklama", 
+        "ID", "Barkod", "Rampa", "Araç Plakası", "Şoför", "Palet Sayısı", 
         "Başlama Zamanı", "Bitiş Zamanı", "Durum", "İşlem Yapan", "Süre (dk)"
     ]
 
@@ -426,7 +426,7 @@ def save_operations_to_sheet(df):
         
         # Yeni veriyi yaz
         values = [df_clean.columns.tolist()] + df_clean.values.tolist()
-        write_sheet(f"{SHEET_NAME}!A1", values)
+        write_sheet(f"{SHEET_NAME}!A1", [get_required_columns()])
         
     except Exception as e:
         st.error(f"Veri kaydedilirken hata: {e}")
@@ -492,7 +492,7 @@ def filter_operations(df, search_query="", status_filter="Aktif", date_filter=No
             filtered_df["Şoför"].str.contains(search_query, case=False, na=False) |
             filtered_df["Rampa"].str.contains(search_query, case=False, na=False) |
             filtered_df["İşlem Yapan"].str.contains(search_query, case=False, na=False) |
-            filtered_df["Açıklama"].str.contains(search_query, case=False, na=False)
+            filtered_df["Palet Sayısı"].str.contains(search_query, case=False, na=False)
         )
         filtered_df = filtered_df[mask]
     
@@ -696,7 +696,7 @@ def render_new_operation_form():
         
         with col2:
             sofor = st.text_input("👤 Şoför Adı *", placeholder="Ahmet Yılmaz")
-            aciklama = st.text_input("📝 Palet Sayısı", placeholder="Sayı giriniz..")
+            palets = st.text_input("📝 Palet Sayısı", placeholder="Sayı giriniz..")
         
         submitted = st.form_submit_button("🚀 Araç İndirilmeye Başlandı", type="primary", use_container_width=True)
         
@@ -734,7 +734,7 @@ def render_new_operation_form():
                     "Rampa": rampa,
                     "Araç Plakası": arac_plaka.upper(),
                     "Şoför": sofor,
-                    "Açıklama": aciklama,
+                    "Palet Sayısı": palets,
                     "Başlama Zamanı": baslama_zamani,
                     "Bitiş Zamanı": "",
                     "Durum": "Aktif",
@@ -843,8 +843,8 @@ def render_active_operations():
                 with col2:
                     st.markdown(f"**🏗️ Rampa:** {row['Rampa']}")
                     st.markdown(f"**👨‍💼 İşlem Yapan:** {row['İşlem Yapan'].split('@')[0]}")
-                    if row['Açıklama']:
-                        st.markdown(f"**📝 Açıklama:** {row['Açıklama']}")
+                    if row['Palet Sayısı']:
+                        st.markdown(f"**📝 Palet Sayısı:** {row['Palet Sayısı']}")
                 
                 with col3:
                     # Büyük tamamlama butonu
@@ -920,8 +920,8 @@ def render_completed_operations():
                 st.markdown(f"**🏗️ Rampa:** {row['Rampa']}")
                 st.markdown(f"**👨‍💼 İşlem Yapan:** {row['İşlem Yapan'].split('@')[0]}")
                 st.markdown(f"**⏱️ Toplam Süre:** {row['Süre (dk)']} dakika")
-                if row['Açıklama']:
-                    st.markdown(f"**📝 Açıklama:** {row['Açıklama']}")
+                if row['Palet Sayısı']:
+                    st.markdown(f"**📝 Palet Sayısı:** {row['Palet Sayısı']}")
         
         st.divider()
 
@@ -999,8 +999,8 @@ def render_all_operations():
                     st.markdown(f"**👨‍💼 İşlem Yapan:** {row['İşlem Yapan'].split('@')[0]}")
                     if row['Süre (dk)']:
                         st.markdown(f"**⏱️ Süre:** {row['Süre (dk)']} dakika")
-                    if row['Açıklama']:
-                        st.markdown(f"**📝 Açıklama:** {row['Açıklama']}")
+                    if row['Palet Sayısı']:
+                        st.markdown(f"**📝 Palet Sayısı:** {row['Palet Sayısı']}")
                 
                 with col3:
                     # Durum göstergesi
