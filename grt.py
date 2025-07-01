@@ -8,6 +8,11 @@ import time
 import hashlib
 import uuid
 
+def get_local_time():
+    """Türkiye saatine göre yerel zaman döndürür"""
+    tz = pytz.timezone("Europe/Istanbul")
+    return datetime.now(tz)
+
 # --- Streamlit Sayfa Ayarları ---
 st.set_page_config(
     page_title="Mal Kabul ve Yükleme Takip Sistemi",
@@ -557,7 +562,7 @@ def render_sidebar():
         col1, col2 = st.columns(2)
         with col1:
             if st.button("🗓️ Bugün", key="sidebar_today_filter", use_container_width=True):
-                st.session_state.date_filter = datetime.now().date()
+                st.session_state.date_filter = get_local_time().date()
                 st.rerun()
         
         with col2:
@@ -596,7 +601,7 @@ def render_sidebar():
         
         # Bugünkü özet
         try:
-            today = datetime.now().date()
+            today = get_local_time().date()
             df['Başlama_Date'] = pd.to_datetime(df['Başlama Zamanı'], errors='coerce').dt.date
             today_df = df[df['Başlama_Date'] == today]
             
@@ -611,7 +616,7 @@ def render_sidebar():
     # Sistem bilgileri
     st.sidebar.markdown("---")
     st.sidebar.markdown("### ℹ️ Sistem Bilgisi")
-    st.sidebar.write(f"**Son Güncelleme:** {datetime.now().strftime('%H:%M')}")
+    st.sidebar.write(f"**Son Güncelleme:** {get_local_time().strftime('%H:%M')}")
     
     if st.session_state.remember_me:
         st.sidebar.success("🔒 Oturum hatırlanıyor")
@@ -677,7 +682,7 @@ def render_new_operation_form():
                     new_id = str(max_id + 1)
                 
                 # Yeni işlem kaydı
-                baslama_zamani = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                baslama_zamani = get_local_time().strftime("%Y-%m-%d %H:%M:%S")
                 
                 yeni_islem = {
                     "ID": new_id,
@@ -755,7 +760,7 @@ def render_active_operations():
             # Başlama zamanından geçen süreyi hesapla
             try:
                 baslama = datetime.strptime(row["Başlama Zamanı"], "%Y-%m-%d %H:%M:%S")
-                gecen_sure = datetime.now() - baslama
+                gecen_sure = get_local_time() - baslama
                 gecen_sure_dk = int(gecen_sure.total_seconds() // 60)
                 gecen_sure_str = f"{gecen_sure_dk} dk"
                 
@@ -991,7 +996,7 @@ def complete_loading(operation_id):
             return
         
         # İşlemi tamamla
-        bitis_zamani = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        bitis_zamani = get_local_time().strftime("%Y-%m-%d %H:%M:%S")
         
         # Süre hesapla
         try:
