@@ -426,7 +426,7 @@ def save_operations_to_sheet(df):
         
         # Yeni veriyi yaz
         values = [df_clean.columns.tolist()] + df_clean.values.tolist()
-        write_sheet(f"{SHEET_NAME}!A1", [get_required_columns()])
+        write_sheet(f"{SHEET_NAME}!A1", values)
         
     except Exception as e:
         st.error(f"Veri kaydedilirken hata: {e}")
