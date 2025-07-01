@@ -290,7 +290,7 @@ def authenticate_user():
                 with st.form("login_form"):
                     st.markdown("### 👤 Giriş Bilgileri")
                     email = st.text_input(
-                        "📧 Kullanıcı Adresiniz", 
+                        "📧 Kullanıcı Adınız", 
                         placeholder="names",
                         help="Kullanıcı adınızı girin"
                     )
