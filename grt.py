@@ -759,7 +759,8 @@ def render_active_operations():
         with st.container():
             # Başlama zamanından geçen süreyi hesapla
             try:
-                baslama = datetime.strptime(row["Başlama Zamanı"], "%Y-%m-%d %H:%M:%S")
+                tz = pytz.timezone("Europe/Istanbul")
+                baslama = tz.localize(datetime.strptime(row["Başlama Zamanı"], "%Y-%m-%d %H:%M:%S"))
                 gecen_sure = get_local_time() - baslama
                 gecen_sure_dk = int(gecen_sure.total_seconds() // 60)
                 gecen_sure_str = f"{gecen_sure_dk} dk"
