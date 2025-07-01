@@ -483,29 +483,18 @@ def filter_operations(df, search_query="", status_filter="Aktif", date_filter=No
 def render_header():
     st.title("🚛 Mal Kabul ve Yükleme Takip Sistemi")
     
-    # Kullanıcı bilgisi ve arama
-    col1, col2 = st.columns([4, 1])
-    with col1:
-        search_query = st.text_input(
-            label="🔍 Arama (Barkod, Plaka, Şoför, Rampa, Kullanıcı)",
-            value=st.session_state.search_query,
-            key="search_input",
-            placeholder="Aramak için yazın...",
-            help="Tüm alanlarda arama yapar"
-        )
-        if search_query != st.session_state.search_query:
-            st.session_state.search_query = search_query
-            st.rerun()
+    # Sadece arama çubuğu kalsın
+    search_query = st.text_input(
+        label="🔍 Arama (Barkod, Plaka, Şoför, Rampa, Kullanıcı)",
+        value=st.session_state.search_query,
+        key="search_input",
+        placeholder="Aramak için yazın...",
+        help="Tüm alanlarda arama yapar"
+    )
+    if search_query != st.session_state.search_query:
+        st.session_state.search_query = search_query
+        st.rerun()
     
-    with col2:
-        st.markdown(f"**👤 {st.session_state.user_email.split('@')[0]}**")
-        if st.button("🚪 Çıkış", key="logout_btn", help="Oturumu kapat"):
-            st.session_state.is_authenticated = False
-            st.session_state.user_email = ""
-            st.session_state.user_token = ""
-            st.session_state.remember_me = False
-            st.rerun()
-
 # --- Ana Butonlar (Mobile Optimized) ---
 def render_action_buttons():
     st.markdown("""
@@ -532,42 +521,53 @@ def render_action_buttons():
             st.session_state.selected_tab = 'Tüm İşlemler'
             st.rerun()
 
-# --- Tarih Filtresi ---
-def render_date_filter():
-    st.markdown('<div class="date-filter-container">', unsafe_allow_html=True)
-    
-    col1, col2, col3 = st.columns([2, 1, 1])
-    
-    with col1:
-        date_filter = st.date_input(
-            "📅 Tarih Filtresi (Raporlama)",
-            value=st.session_state.date_filter,
-            help="Belirli bir günün işlemlerini görmek için tarih seçin"
-        )
-        
-        if date_filter != st.session_state.date_filter:
-            st.session_state.date_filter = date_filter
-            st.rerun()
-    
-    with col2:
-        if st.button("🗓️ Bugün", key="today_filter"):
-            st.session_state.date_filter = datetime.now().date()
-            st.rerun()
-    
-    with col3:
-        if st.button("🔄 Temizle", key="clear_filter"):
-            st.session_state.date_filter = None
-            st.rerun()
-    
-    st.markdown('</div>', unsafe_allow_html=True)
-    
     # Aktif filtre göstergesi
     if st.session_state.date_filter:
         st.info(f"📅 **Tarih Filtresi Aktif:** {st.session_state.date_filter.strftime('%d.%m.%Y')}")
 
 # --- Sol Kenar Çubuğu ---
 def render_sidebar():
+    # Kullanıcı bilgisi ve çıkış
+    st.sidebar.markdown(f"### 👤 {st.session_state.user_email.split('@')[0]}")
+    if st.sidebar.button("🚪 Çıkış Yap", key="sidebar_logout", use_container_width=True):
+        st.session_state.is_authenticated = False
+        st.session_state.user_email = ""
+        st.session_state.user_token = ""
+        st.session_state.remember_me = False
+        st.rerun()
+    
+    st.sidebar.markdown("---")
+    
+    # Navigasyon pop-up
     st.sidebar.markdown("### 📋 Navigasyon")
+    
+    with st.sidebar.expander("🔍 Filtreler", expanded=False):
+        # Tarih filtresi
+        date_filter = st.date_input(
+            "📅 Tarih Filtresi",
+            value=st.session_state.date_filter,
+            help="Belirli bir günün işlemlerini görmek için tarih seçin",
+            key="sidebar_date_filter"
+        )
+        
+        if date_filter != st.session_state.date_filter:
+            st.session_state.date_filter = date_filter
+            st.rerun()
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("🗓️ Bugün", key="sidebar_today_filter", use_container_width=True):
+                st.session_state.date_filter = datetime.now().date()
+                st.rerun()
+        
+        with col2:
+            if st.button("🔄 Temizle", key="sidebar_clear_filter", use_container_width=True):
+                st.session_state.date_filter = None
+                st.rerun()
+        
+        # Aktif filtre göstergesi
+        if st.session_state.date_filter:
+            st.info(f"📅 **Aktif:** {st.session_state.date_filter.strftime('%d.%m.%Y')}")
     
     # Mevcut tab göstergesi
     current_tab = st.session_state.selected_tab
@@ -886,24 +886,6 @@ def render_all_operations():
         st.info("📭 Kayıtlı işlem bulunmuyor.")
         return
     
-    # Özet istatistikler
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("🔄 Aktif", len(all_df[all_df["Durum"] == "Aktif"]))
-    with col2:
-        st.metric("✅ Tamamlanan", len(all_df[all_df["Durum"] == "Tamamlandı"]))
-    with col3:
-        st.metric("📊 Toplam", len(all_df))
-    with col4:
-        # Bugünkü işlemler
-        try:
-            today = datetime.now().date()
-            all_df['Başlama_Date'] = pd.to_datetime(all_df['Başlama Zamanı'], errors='coerce').dt.date
-            today_count = len(all_df[all_df['Başlama_Date'] == today])
-            st.metric("📅 Bugün", today_count)
-        except:
-            st.metric("📅 Bugün", "?")
-    
     # Görünüm seçenekleri
     col1, col2 = st.columns([3, 1])
     with col1:
@@ -1044,10 +1026,7 @@ def main():
     
     # Ana butonlar (mobil optimized)
     render_action_buttons()
-    
-    # Tarih filtresi
-    render_date_filter()
-    
+      
     # Sidebar
     render_sidebar()
     
