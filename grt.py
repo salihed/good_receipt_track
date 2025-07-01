@@ -676,7 +676,7 @@ def render_sidebar():
 
 # --- Yeni İşlem Formu ---
 def render_new_operation_form():
-    st.subheader("📦 Yeni Mal Kabul İşlemi")
+    st.subheader("📝 Yeni Mal Kabul İşlemi")
     
     with st.form("new_operation_form"):
         # Teslimat okutma
