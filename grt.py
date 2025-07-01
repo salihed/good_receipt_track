@@ -199,7 +199,11 @@ AUTHORIZED_USERS = [
     "goksel@norm.com",
     "samet@norm.com",
     "erhan@norm.com",
-    "salih@norm.com"
+    "salih@norm.com",
+    "coskun@norm.com",
+    "zeynal@norm.com",
+    "serkan@norm.com",
+    "huseyin@norm.com"
 ]
 
 # --- Rampa Seçenekleri ---
@@ -251,7 +255,14 @@ def authenticate_user():
     # URL token kontrolü
     if not st.session_state.is_authenticated:
         if check_url_token():
-            st.rerun()
+            st.rerun
+        
+        else:
+            # Otomatik giriş için token kontrolü
+            if st.session_state.remember_me and st.session_state.user_email and st.session_state.user_token:
+                if st.session_state.user_email in AUTHORIZED_USERS:
+                    st.session_state.is_authenticated = True
+                    st.rerun()        
     
     if not st.session_state.is_authenticated:
         st.markdown("""
@@ -268,7 +279,7 @@ def authenticate_user():
                     st.markdown("### 👤 Giriş Bilgileri")
                     email = st.text_input(
                         "📧 E-posta Adresiniz", 
-                        placeholder="kullanici@firma.com",
+                        placeholder="ad@firma.com",
                         help="Yetkili e-posta adresinizi girin"
                     )
                     
@@ -308,7 +319,7 @@ def authenticate_user():
             st.markdown("""
             **Yetkili Kullanıcılar:**
             - Mal kabul personeli
-            - Depo sorumluları  
+            - Saha ve Takım Liderleri 
             - Yöneticiler
             
             **Güvenlik:**
@@ -319,7 +330,6 @@ def authenticate_user():
             **Mobil Kullanım:**
             - Telefon tarayıcınızda sorunsuz çalışır
             - Ana ekrana kısayol ekleyebilirsiniz
-            - Dokunmatik optimized arayüz
             """)
         
         return False
