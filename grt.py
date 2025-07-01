@@ -193,21 +193,7 @@ if 'login_timestamp' not in st.session_state:
     st.session_state.login_timestamp = None
 
 # --- Yetkili Kullanıcılar ---
-AUTHORIZED_USERS = [
-    "muhammed@norm.com",
-    "umit@norm.com",
-    "tevfik@norm.com",
-    "fatih@norm.com",
-    "murat@norm.com",
-    "goksel@norm.com",
-    "samet@norm.com",
-    "erhan@norm.com",
-    "salih@norm.com",
-    "coskun@norm.com",
-    "zeynal@norm.com",
-    "serkan@norm.com",
-    "huseyin@norm.com"
-]
+AUTHORIZED_USERS = st.secrets["users"]["authorized"]
 
 # --- Rampa Seçenekleri ---
 RAMP_OPTIONS = ["Kuzey Rampa", "Güney Rampa", "Yer Rampası"]
