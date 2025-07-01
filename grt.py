@@ -188,6 +188,9 @@ if 'date_filter' not in st.session_state:
     st.session_state.date_filter = None
 if 'remember_me' not in st.session_state:
     st.session_state.remember_me = False
+# YENİ: Login timestamp ekleyin
+if 'login_timestamp' not in st.session_state:
+    st.session_state.login_timestamp = None
 
 # --- Yetkili Kullanıcılar ---
 AUTHORIZED_USERS = [
@@ -234,35 +237,72 @@ def check_url_token():
     """URL'den token kontrolü yap"""
     query_params = st.query_params
     if 'token' in query_params and 'email' in query_params:
-        token = query_params['token'][0]
-        email = query_params['email'][0]
+        token = query_params['token'][0] if isinstance(query_params['token'], list) else query_params['token']
+        email = query_params['email'][0] if isinstance(query_params['email'], list) else query_params['email']
         
         if email in AUTHORIZED_USERS:
             st.session_state.user_email = email
             st.session_state.user_token = token
             st.session_state.is_authenticated = True
             st.session_state.remember_me = True
+            st.session_state.login_timestamp = time.time()  # YENİ: Giriş zamanını kaydet
             return True
     return False
 
+# 3. Session timeout kontrolü için yeni fonksiyon ekleyin:
+
+def check_session_timeout():
+    """2 saatlik session timeout kontrolü"""
+    if st.session_state.login_timestamp is None:
+        return False
+    
+    current_time = time.time()
+    session_duration = current_time - st.session_state.login_timestamp
+    
+    # 2 saat = 7200 saniye
+    if session_duration > 7200:
+        # Session süresi dolmuş
+        st.session_state.is_authenticated = False
+        st.session_state.user_email = ""
+        st.session_state.user_token = ""
+        st.session_state.remember_me = False
+        st.session_state.login_timestamp = None
+        return False
+    
+    return True
+
+
+
 def create_remember_link(email, token):
     """Hatırla bağlantısı oluştur"""
-    base_url = "https://goodreceipttrack-ddnyaid2aaoahuyjohmthe.streamlit.app/"  # Gerçek URL'nizi buraya yazın
+    base_url = "https://goodreceipttrack-ddnyaid2aaoahuyjohmthe.streamlit.app"  # Gerçek URL'nizi buraya yazın
     return f"{base_url}?email={email}&token={token}"
 
 # --- Kullanıcı Kimlik Doğrulama ---
 def authenticate_user():
+    # İlk olarak session timeout kontrolü
+    if st.session_state.is_authenticated and not check_session_timeout():
+        st.warning("⏰ Oturum süresi doldu. Lütfen tekrar giriş yapın.")
+        time.sleep(2)
+        st.rerun()
+        
     # URL token kontrolü
     if not st.session_state.is_authenticated:
         if check_url_token():
-            st.rerun
-        
-        else:
-            # Otomatik giriş için token kontrolü
-            if st.session_state.remember_me and st.session_state.user_email and st.session_state.user_token:
-                if st.session_state.user_email in AUTHORIZED_USERS:
+            st.rerun()
+
+        # Otomatik giriş için token kontrolü (remember me)
+        elif st.session_state.remember_me and st.session_state.user_email and st.session_state.user_token:
+            if st.session_state.user_email in AUTHORIZED_USERS:
+                # Session süresini kontrol et
+                if check_session_timeout():
                     st.session_state.is_authenticated = True
-                    st.rerun()        
+                    st.rerun()
+                else:
+                    # Session süresi dolmuş, temizle
+                    st.session_state.remember_me = False
+                    st.session_state.user_email = ""
+                    st.session_state.user_token = ""      
     
     if not st.session_state.is_authenticated:
         st.markdown("""
@@ -296,6 +336,7 @@ def authenticate_user():
                             st.session_state.user_email = email
                             st.session_state.is_authenticated = True
                             st.session_state.remember_me = remember_me
+                            st.session_state.login_timestamp = time.time()  # YENİ: Giriş zamanını kaydet
                             
                             if remember_me:
                                 # Token oluştur ve göster
@@ -550,6 +591,7 @@ def render_sidebar():
         st.session_state.user_email = ""
         st.session_state.user_token = ""
         st.session_state.remember_me = False
+        st.session_state.login_timestamp = None  # YENİ: Login timestamp'i temizle
         st.rerun()
     
     st.sidebar.markdown("---")
@@ -624,6 +666,20 @@ def render_sidebar():
         except:
             pass
     
+        # Session süresi bilgisi:
+        if st.session_state.is_authenticated and st.session_state.login_timestamp:
+            current_time = time.time()
+            session_duration = current_time - st.session_state.login_timestamp
+            remaining_time = 7200 - session_duration  # 2 saat - geçen süre
+            
+            if remaining_time > 0:
+                remaining_hours = int(remaining_time // 3600)
+                remaining_minutes = int((remaining_time % 3600) // 60)
+                st.sidebar.info(f"⏰ Oturum süresi: {remaining_hours}s {remaining_minutes}dk kaldı")
+            else:
+                st.sidebar.warning("⚠️ Oturum süresi dolmak üzere")
+
+
     # Sistem bilgileri
     st.sidebar.markdown("---")
     st.sidebar.markdown("### ℹ️ Sistem Bilgisi")
