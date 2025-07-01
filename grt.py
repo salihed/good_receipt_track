@@ -664,7 +664,7 @@ def render_sidebar():
     with st.sidebar.expander("❓ Yardım"):
         st.markdown("""
         **Hızlı Kısayollar:**
-        - 📦 Yeni işlem başlat
+        - 📝 Yeni işlem başlat
         - 🔄 Aktif yüklemeleri gör
         - 📅 Tarih filtresi kullan
         
@@ -770,7 +770,7 @@ def render_active_operations():
         # Yeni işlem başlatma öneri butonu
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
-            if st.button("📦 Yeni İşlem Başlat", type="primary", use_container_width=True):
+            if st.button("📝 Yeni İşlem Başlat", type="primary", use_container_width=True):
                 st.session_state.selected_tab = 'Yeni İşlem'
                 st.rerun()
         return
