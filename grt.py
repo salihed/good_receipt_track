@@ -290,9 +290,9 @@ def authenticate_user():
                 with st.form("login_form"):
                     st.markdown("### 👤 Giriş Bilgileri")
                     email = st.text_input(
-                        "📧 E-posta Adresiniz", 
-                        placeholder="ad@firma.com",
-                        help="Yetkili e-posta adresinizi girin"
+                        "📧 Kullanıcı Adresiniz", 
+                        placeholder="names",
+                        help="Kullanıcı adınızı girin"
                     )
                     
                     remember_me = st.checkbox(
