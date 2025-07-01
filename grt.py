@@ -235,18 +235,21 @@ def generate_user_token(email):
 
 def check_url_token():
     """URL'den token kontrolü yap"""
-    query_params = st.query_params
-    if 'token' in query_params and 'email' in query_params:
-        token = query_params['token'][0] if isinstance(query_params['token'], list) else query_params['token']
-        email = query_params['email'][0] if isinstance(query_params['email'], list) else query_params['email']
-        
-        if email in AUTHORIZED_USERS:
-            st.session_state.user_email = email
-            st.session_state.user_token = token
-            st.session_state.is_authenticated = True
-            st.session_state.remember_me = True
-            st.session_state.login_timestamp = time.time()  # YENİ: Giriş zamanını kaydet
-            return True
+    try:
+        query_params = st.query_params
+        if 'token' in query_params and 'email' in query_params:
+            token = query_params['token']
+            email = query_params['email']
+            
+            if email in AUTHORIZED_USERS:
+                st.session_state.user_email = email
+                st.session_state.user_token = token
+                st.session_state.is_authenticated = True
+                st.session_state.remember_me = True
+                st.session_state.login_timestamp = time.time()  # Giriş zamanını kaydet
+                return True
+    except:
+        pass
     return False
 
 # 3. Session timeout kontrolü için yeni fonksiyon ekleyin:
@@ -261,12 +264,8 @@ def check_session_timeout():
     
     # 2 saat = 7200 saniye
     if session_duration > 7200:
-        # Session süresi dolmuş
+        # Session süresi dolmuş - sadece authentication flag'i kapat
         st.session_state.is_authenticated = False
-        st.session_state.user_email = ""
-        st.session_state.user_token = ""
-        st.session_state.remember_me = False
-        st.session_state.login_timestamp = None
         return False
     
     return True
@@ -283,26 +282,13 @@ def authenticate_user():
     # İlk olarak session timeout kontrolü
     if st.session_state.is_authenticated and not check_session_timeout():
         st.warning("⏰ Oturum süresi doldu. Lütfen tekrar giriş yapın.")
-        time.sleep(2)
-        st.rerun()
         
-    # URL token kontrolü
-    if not st.session_state.is_authenticated:
-        if check_url_token():
-            st.rerun()
-
-        # Otomatik giriş için token kontrolü (remember me)
-        elif st.session_state.remember_me and st.session_state.user_email and st.session_state.user_token:
-            if st.session_state.user_email in AUTHORIZED_USERS:
-                # Session süresini kontrol et
-                if check_session_timeout():
-                    st.session_state.is_authenticated = True
-                    st.rerun()
-                else:
-                    # Session süresi dolmuş, temizle
-                    st.session_state.remember_me = False
-                    st.session_state.user_email = ""
-                    st.session_state.user_token = ""      
+        st.session_state.user_email = ""
+        st.session_state.user_token = ""
+        st.session_state.remember_me = False
+        st.session_state.login_timestamp = None
+        time.sleep(2)
+        st.rerun()     
     
     if not st.session_state.is_authenticated:
         st.markdown("""
