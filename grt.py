@@ -682,7 +682,7 @@ def render_new_operation_form():
         # Teslimat okutma
         st.markdown("### 1️⃣ İrsaliye Bilgileri")
         Teslimat = st.text_input(
-            "🏷️ Teslimat No (İrsaliye Üzerinden)",
+            "🏷️ Teslimat No",
             placeholder="10 haneli Teslimatu girin",
             help="Manuel olarak girin"
         )
