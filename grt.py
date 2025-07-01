@@ -696,7 +696,7 @@ def render_new_operation_form():
         
         with col2:
             sofor = st.text_input("👤 Şoför Adı *", placeholder="Ahmet Yılmaz")
-            palets = st.text_input("📝 Palet Sayısı", placeholder="Sayı giriniz..")
+            palets = st.number_input("📝 Palet Sayısı", min_value=0, step=1, format="%d")
         
         submitted = st.form_submit_button("🚀 Araç İndirilmeye Başlandı", type="primary", use_container_width=True)
         
