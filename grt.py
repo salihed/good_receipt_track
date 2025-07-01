@@ -387,7 +387,7 @@ def read_sheet(range_):
 
 def get_required_columns():
     return [
-        "ID", "Barkod", "Rampa", "Araç Plakası", "Şoför", "Palet Sayısı", 
+        "ID", "Teslimat", "Rampa", "Araç Plakası", "Şoför", "Palet Sayısı", 
         "Başlama Zamanı", "Bitiş Zamanı", "Durum", "İşlem Yapan", "Süre (dk)"
     ]
 
@@ -487,7 +487,7 @@ def filter_operations(df, search_query="", status_filter="Aktif", date_filter=No
     # Arama filtresi
     if search_query:
         mask = (
-            filtered_df["Barkod"].str.contains(search_query, case=False, na=False) |
+            filtered_df["Teslimat"].str.contains(search_query, case=False, na=False) |
             filtered_df["Araç Plakası"].str.contains(search_query, case=False, na=False) |
             filtered_df["Şoför"].str.contains(search_query, case=False, na=False) |
             filtered_df["Rampa"].str.contains(search_query, case=False, na=False) |
@@ -514,7 +514,7 @@ def render_header():
     
     # Sadece arama çubuğu kalsın
     search_query = st.text_input(
-        label="🔍 Arama (Barkod, Plaka, Şoför, Rampa, Kullanıcı)",
+        label="🔍 Arama (Teslimat, Plaka, Şoför, Rampa, Kullanıcı)",
         value=st.session_state.search_query,
         key="search_input",
         placeholder="Aramak için yazın...",
@@ -671,7 +671,7 @@ def render_sidebar():
         **Mobil İpuçları:**
         - Ana ekrana kısayol ekle
         - Yatay modda kullan
-        - Barkod okuyucu kullan
+        - Teslimat okuyucu kullan
         """)
 
 # --- Yeni İşlem Formu ---
@@ -679,11 +679,11 @@ def render_new_operation_form():
     st.subheader("📦 Yeni Mal Kabul İşlemi")
     
     with st.form("new_operation_form"):
-        # Barkod okutma
-        st.markdown("### 1️⃣ Barkod Okutma")
-        barkod = st.text_input(
+        # Teslimat okutma
+        st.markdown("### 1️⃣ Teslimat Okutma")
+        Teslimat = st.text_input(
             "🏷️ Teslimat No (İrsaliye Üzerinden)",
-            placeholder="10 haneli barkodu girin",
+            placeholder="10 haneli Teslimatu girin",
             help="Manuel olarak girin"
         )
         
@@ -701,13 +701,13 @@ def render_new_operation_form():
         submitted = st.form_submit_button("🚀 Araç İndirilmeye Başlandı", type="primary", use_container_width=True)
         
         if submitted:
-            if not barkod or not rampa or not arac_plaka or not sofor:
+            if not Teslimat or not rampa or not arac_plaka or not sofor:
                 st.error("⚠️ Lütfen tüm zorunlu alanları doldurunuz!")
                 return
             
-            # 🔐 Barkod 10 haneli sayı mı kontrol et
-            if not re.fullmatch(r"\d{10}", barkod):
-                st.error("❌ Barkod yalnızca 10 haneli sayı olmalıdır!")
+            # 🔐 Teslimat 10 haneli sayı mı kontrol et
+            if not re.fullmatch(r"\d{10}", Teslimat):
+                st.error("❌ Teslimat yalnızca 10 haneli sayı olmalıdır!")
                 return
             
             try:
@@ -730,7 +730,7 @@ def render_new_operation_form():
                 
                 yeni_islem = {
                     "ID": new_id,
-                    "Barkod": barkod,
+                    "Teslimat": Teslimat,
                     "Rampa": rampa,
                     "Araç Plakası": arac_plaka.upper(),
                     "Şoför": sofor,
@@ -836,7 +836,7 @@ def render_active_operations():
                 col1, col2, col3 = st.columns([2, 2, 1])
                 
                 with col1:
-                    st.markdown(f"**🏷️ Barkod:** `{row['Barkod']}`")
+                    st.markdown(f"**🏷️ Teslimat:** `{row['Teslimat']}`")
                     st.markdown(f"**👤 Şoför:** {row['Şoför']}")
                     st.markdown(f"**⏰ Başlama:** {row['Başlama Zamanı']}")
                 
@@ -911,7 +911,7 @@ def render_completed_operations():
             col1, col2 = st.columns(2)
             
             with col1:
-                st.markdown(f"**🏷️ Barkod:** `{row['Barkod']}`")
+                st.markdown(f"**🏷️ Teslimat:** `{row['Teslimat']}`")
                 st.markdown(f"**👤 Şoför:** {row['Şoför']}")
                 st.markdown(f"**⏰ Başlama:** {row['Başlama Zamanı']}")
                 st.markdown(f"**🏁 Bitiş:** {row['Bitiş Zamanı']}")
@@ -960,12 +960,12 @@ def render_all_operations():
     if view_mode == "Tablo Görünümü":
         # Tablo görünümü
         st.dataframe(
-            display_df[["ID", "Barkod", "Rampa", "Araç Plakası", "Şoför","Palet Sayısı", "Başlama Zamanı", "Bitiş Zamanı", "Durum", "Süre (dk)"]],
+            display_df[["ID", "Teslimat", "Rampa", "Araç Plakası", "Şoför","Palet Sayısı", "Başlama Zamanı", "Bitiş Zamanı", "Durum", "Süre (dk)"]],
             use_container_width=True,
             hide_index=True,
             column_config={
                 "ID": st.column_config.NumberColumn("ID", width="small"),
-                "Barkod": st.column_config.TextColumn("Barkod", width="medium"),
+                "Teslimat": st.column_config.TextColumn("Teslimat", width="medium"),
                 "Rampa": st.column_config.TextColumn("Rampa", width="medium"),
                 "Araç Plakası": st.column_config.TextColumn("Plaka", width="medium"),
                 "Şoför": st.column_config.TextColumn("Şoför", width="medium"),
@@ -989,7 +989,7 @@ def render_all_operations():
                 col1, col2, col3 = st.columns([2, 2, 1])
                 
                 with col1:
-                    st.markdown(f"**🏷️ Barkod:** `{row['Barkod']}`")
+                    st.markdown(f"**🏷️ Teslimat:** `{row['Teslimat']}`")
                     st.markdown(f"**👤 Şoför:** {row['Şoför']}")
                     st.markdown(f"**⏰ Başlama:** {row['Başlama Zamanı']}")
                     if row['Bitiş Zamanı']:
