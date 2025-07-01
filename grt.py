@@ -960,7 +960,7 @@ def render_all_operations():
     if view_mode == "Tablo Görünümü":
         # Tablo görünümü
         st.dataframe(
-            display_df[["ID", "Barkod", "Rampa", "Araç Plakası", "Şoför", "Başlama Zamanı", "Bitiş Zamanı", "Durum", "Süre (dk)"]],
+            display_df[["ID", "Barkod", "Rampa", "Araç Plakası", "Şoför","Palet Sayısı", "Başlama Zamanı", "Bitiş Zamanı", "Durum", "Süre (dk)"]],
             use_container_width=True,
             hide_index=True,
             column_config={
@@ -969,6 +969,7 @@ def render_all_operations():
                 "Rampa": st.column_config.TextColumn("Rampa", width="medium"),
                 "Araç Plakası": st.column_config.TextColumn("Plaka", width="medium"),
                 "Şoför": st.column_config.TextColumn("Şoför", width="medium"),
+                "Palet Sayısı":st.column_config.TextColumn("Palet Sayısı", width="medium"),
                 "Başlama Zamanı": st.column_config.DatetimeColumn("Başlama", width="medium"),
                 "Bitiş Zamanı": st.column_config.DatetimeColumn("Bitiş", width="medium"),
                 "Durum": st.column_config.TextColumn("Durum", width="small"),
