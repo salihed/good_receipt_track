@@ -247,7 +247,7 @@ def check_url_token():
 
 def create_remember_link(email, token):
     """Hatırla bağlantısı oluştur"""
-    base_url = "https://your-app-url.streamlit.app"  # Gerçek URL'nizi buraya yazın
+    base_url = "https://goodreceipttrack-ddnyaid2aaoahuyjohmthe.streamlit.app/"  # Gerçek URL'nizi buraya yazın
     return f"{base_url}?email={email}&token={token}"
 
 # --- Kullanıcı Kimlik Doğrulama ---
