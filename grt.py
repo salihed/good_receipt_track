@@ -222,7 +222,7 @@ def generate_user_token(email):
 
 def check_url_token():
     """URL'den token kontrolü yap"""
-    query_params = st.experimental_get_query_params()
+    query_params = st.query_params()
     if 'token' in query_params and 'email' in query_params:
         token = query_params['token'][0]
         email = query_params['email'][0]
