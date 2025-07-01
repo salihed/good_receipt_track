@@ -696,7 +696,7 @@ def render_new_operation_form():
         
         with col2:
             sofor = st.text_input("👤 Şoför Adı *", placeholder="Ahmet Yılmaz")
-            palets = st.number_input("📝 Palet Sayısı", min_value=0, step=1, format="%d")
+            palets = st.number_input("📦 Palet Sayısı", min_value=0, step=1, format="%d")
         
         submitted = st.form_submit_button("🚀 Araç İndirilmeye Başlandı", type="primary", use_container_width=True)
         
@@ -844,7 +844,7 @@ def render_active_operations():
                     st.markdown(f"**🏗️ Rampa:** {row['Rampa']}")
                     st.markdown(f"**👨‍💼 İşlem Yapan:** {row['İşlem Yapan'].split('@')[0]}")
                     if row['Palet Sayısı']:
-                        st.markdown(f"**📝 Palet Sayısı:** {row['Palet Sayısı']}")
+                        st.markdown(f"**📦 Palet Sayısı:** {row['Palet Sayısı']}")
                 
                 with col3:
                     # Büyük tamamlama butonu
@@ -921,7 +921,7 @@ def render_completed_operations():
                 st.markdown(f"**👨‍💼 İşlem Yapan:** {row['İşlem Yapan'].split('@')[0]}")
                 st.markdown(f"**⏱️ Toplam Süre:** {row['Süre (dk)']} dakika")
                 if row['Palet Sayısı']:
-                    st.markdown(f"**📝 Palet Sayısı:** {row['Palet Sayısı']}")
+                    st.markdown(f"**📦 Palet Sayısı:** {row['Palet Sayısı']}")
         
         st.divider()
 
@@ -1001,7 +1001,7 @@ def render_all_operations():
                     if row['Süre (dk)']:
                         st.markdown(f"**⏱️ Süre:** {row['Süre (dk)']} dakika")
                     if row['Palet Sayısı']:
-                        st.markdown(f"**📝 Palet Sayısı:** {row['Palet Sayısı']}")
+                        st.markdown(f"**📦 Palet Sayısı:** {row['Palet Sayısı']}")
                 
                 with col3:
                     # Durum göstergesi
