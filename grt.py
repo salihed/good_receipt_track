@@ -7,6 +7,7 @@ import pytz
 import time
 import hashlib
 import uuid
+import re
 
 def get_local_time():
     """Türkiye saatine göre yerel zaman döndürür"""
@@ -643,9 +644,9 @@ def render_new_operation_form():
         # Barkod okutma
         st.markdown("### 1️⃣ Barkod Okutma")
         barkod = st.text_input(
-            "🏷️ Barkod (İrsaliye Üzerinden)",
-            placeholder="Barkodu okutun veya manuel girin...",
-            help="Barkod okuyucu ile okutun veya manuel olarak girin"
+            "🏷️ Teslimat No (İrsaliye Üzerinden)",
+            placeholder="10 haneli barkodu girin",
+            help="Manuel olarak girin"
         )
         
         st.markdown("### 2️⃣ İşlem Bilgileri")
@@ -664,6 +665,11 @@ def render_new_operation_form():
         if submitted:
             if not barkod or not rampa or not arac_plaka or not sofor:
                 st.error("⚠️ Lütfen tüm zorunlu alanları doldurunuz!")
+                return
+            
+            # 🔐 Barkod 10 haneli sayı mı kontrol et
+            if not re.fullmatch(r"\d{10}", barkod):
+                st.error("❌ Barkod yalnızca 10 haneli sayı olmalıdır!")
                 return
             
             try:
