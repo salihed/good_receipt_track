@@ -8,6 +8,9 @@ import time
 import hashlib
 import uuid
 import re
+import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 def get_local_time():
     """Türkiye saatine göre yerel zaman döndürür"""
@@ -251,6 +254,8 @@ def check_session_timeout():
     # 2 saat = 7200 saniye
     if session_duration > 7200:
         # Session süresi dolmuş - sadece authentication flag'i kapat
+        st.warning("⏰ Oturum süresi doldu. Lütfen tekrar giriş yapın.")
+        time.sleep(3)  # 3 saniye bekle
         st.session_state.is_authenticated = False
         return False
     
@@ -432,7 +437,7 @@ def save_operations_to_sheet(df):
         st.error(f"Veri kaydedilirken hata: {e}")
         raise
 
-@st.cache_data(ttl=30)
+@st.cache_data(ttl=60)
 def load_operations():
     df = read_sheet(f"{SHEET_NAME}!A1:Z1000")
     required_columns = get_required_columns()
@@ -524,31 +529,6 @@ def render_header():
         st.session_state.search_query = search_query
         st.rerun()
     
-# --- Ana Butonlar (Mobile Optimized) ---
-def render_action_buttons():
-    st.markdown("""
-    <div class="action-buttons">
-    </div>
-    """, unsafe_allow_html=True)
-    
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        if st.button("📦 Yeni İşlem", key="btn_new", type="primary", use_container_width=True):
-            st.session_state.selected_tab = 'Yeni İşlem'
-            st.rerun()
-    
-    with col2:
-        df = load_operations()
-        aktif_count = len(df[df["Durum"] == "Aktif"]) if not df.empty else 0
-        if st.button(f"🔄 Aktif Yüklemeler ({aktif_count})", key="btn_active", use_container_width=True):
-            st.session_state.selected_tab = 'Aktif Yüklemeler'
-            st.rerun()
-    
-    with col3:
-        if st.button("📋 Tüm İşlemler", key="btn_all", use_container_width=True):
-            st.session_state.selected_tab = 'Tüm İşlemler'
-            st.rerun()
 
     # Aktif filtre göstergesi
     if st.session_state.date_filter:
@@ -683,7 +663,7 @@ def render_new_operation_form():
         st.markdown("### 1️⃣ İrsaliye Bilgileri")
         Teslimat = st.text_input(
             "🏷️ Teslimat No*",
-            placeholder="10 haneli Teslimatu girin",
+            placeholder="10 haneli Teslimat girin",
             help="Manuel olarak girin"
         )
         
@@ -958,13 +938,13 @@ def render_all_operations():
             "ID": st.column_config.NumberColumn("ID", width="small"),
             "Teslimat": st.column_config.TextColumn("Teslimat", width="medium"),
             "Rampa": st.column_config.TextColumn("Rampa", width="medium"),
-            "Araç Plakası": st.column_config.TextColumn("Plaka", width="medium"),
+            "Araç Plakası": st.column_config.TextColumn("Plaka", width="small"),
             "Şoför": st.column_config.TextColumn("Şoför", width="medium"),
             "Palet Sayısı":st.column_config.TextColumn("Palet Sayısı", width="small"),
             "Başlama Zamanı": st.column_config.DatetimeColumn("Başlama", width="medium"),
             "Bitiş Zamanı": st.column_config.DatetimeColumn("Bitiş", width="medium"),
             "Durum": st.column_config.TextColumn("Durum", width="small"),
-            "İşlem Yapan": st.column_config.TextColumn("İşlem Yapan", width="medium"),
+            "İşlem Yapan": st.column_config.TextColumn("İşlem Yapan", width="small"),
             "Süre (dk)": st.column_config.NumberColumn("Süre", width="small")
         }
     )
@@ -1017,6 +997,325 @@ def complete_loading(operation_id):
     except Exception as e:
         st.error(f"❌ İşlem tamamlanırken hata: {e}")
 
+# Dashboard ve grafik fonksiyonları ekleyin
+
+# --- Dashboard/İstatistik Sayfası ---
+def render_dashboard():
+    st.subheader("📊 İstatistikler ve Analiz")
+    
+    df = load_operations()
+    if df.empty:
+        st.info("📭 Analiz için veri bulunmuyor.")
+        return
+    
+    # Tarih aralığı seçimi
+    col1, col2 = st.columns(2)
+    with col1:
+        start_date = st.date_input(
+            "📅 Başlangıç Tarihi",
+            value=get_local_time().date() - timedelta(days=7),
+            key="dashboard_start_date"
+        )
+    with col2:
+        end_date = st.date_input(
+            "📅 Bitiş Tarihi", 
+            value=get_local_time().date(),
+            key="dashboard_end_date"
+        )
+    
+    # Tarih filtreleme
+    try:
+        df['Başlama_Date'] = pd.to_datetime(df['Başlama Zamanı'], errors='coerce').dt.date
+        filtered_df = df[(df['Başlama_Date'] >= start_date) & (df['Başlama_Date'] <= end_date)]
+    except:
+        filtered_df = df
+    
+    if filtered_df.empty:
+        st.warning("⚠️ Seçilen tarih aralığında veri bulunmuyor.")
+        return
+    
+    # Genel Metrikleri
+    st.markdown("### 📈 Genel Özet")
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        total_operations = len(filtered_df)
+        st.metric("🚛 Toplam Araç", total_operations)
+    
+    with col2:
+        completed_operations = len(filtered_df[filtered_df['Durum'] == 'Tamamlandı'])
+        st.metric("✅ Tamamlanan", completed_operations)
+    
+    with col3:
+        active_operations = len(filtered_df[filtered_df['Durum'] == 'Aktif'])
+        st.metric("🔄 Aktif İşlem", active_operations)
+    
+    with col4:
+        # Toplam palet sayısı
+        try:
+            total_pallets = filtered_df['Palet Sayısı'].replace('', 0).astype(float).sum()
+            st.metric("📦 Toplam Palet", f"{total_pallets:.0f}")
+        except:
+            st.metric("📦 Toplam Palet", "N/A")
+    
+    # Günlük analiz
+    st.markdown("### 📅 Günlük Analiz")
+    daily_stats = calculate_daily_stats(filtered_df)
+    
+    if not daily_stats.empty:
+        # Grafik seçimi
+        chart_type = st.selectbox(
+            "📊 Grafik Türü:",
+            ["Araç Sayısı", "Palet/Süre Analizi", "Rampa Dağılımı", "Performans Trendi"],
+            key="chart_type"
+        )
+        
+        if chart_type == "Araç Sayısı":
+            render_vehicle_count_chart(daily_stats)
+        elif chart_type == "Palet/Süre Analizi":
+            render_pallet_time_chart(daily_stats)
+        elif chart_type == "Rampa Dağılımı":
+            render_ramp_distribution_chart(filtered_df)
+        elif chart_type == "Performans Trendi":
+            render_performance_trend_chart(daily_stats)
+    
+    # Detaylı tablo
+    st.markdown("### 📋 Günlük Detay Tablosu")
+    st.dataframe(
+        daily_stats,
+        use_container_width=True,
+        column_config={
+            "Tarih": st.column_config.DateColumn("Tarih", width="medium"),
+            "Araç Sayısı": st.column_config.NumberColumn("Araç Sayısı", width="small"),
+            "Toplam Palet": st.column_config.NumberColumn("Toplam Palet", width="small"),
+            "Ortalama Süre": st.column_config.NumberColumn("Ort. Süre (dk)", width="small"),
+            "Palet Başına Süre": st.column_config.NumberColumn("Palet/Süre (dk)", width="small")
+        }
+    )
+
+def calculate_daily_stats(df):
+    """Günlük istatistikleri hesapla"""
+    try:
+        # Tarih bazında gruplama
+        df['Başlama_Date'] = pd.to_datetime(df['Başlama Zamanı'], errors='coerce').dt.date
+        
+        daily_stats = []
+        
+        for date in sorted(df['Başlama_Date'].dropna().unique()):
+            day_df = df[df['Başlama_Date'] == date]
+            
+            # Temel istatistikler
+            vehicle_count = len(day_df)
+            completed_count = len(day_df[day_df['Durum'] == 'Tamamlandı'])
+            
+            # Palet sayısı
+            total_pallets = 0
+            try:
+                pallet_values = day_df['Palet Sayısı'].replace('', 0).astype(float)
+                total_pallets = pallet_values.sum()
+            except:
+                pass
+            
+            # Süre analizi (sadece tamamlanan işlemler)
+            completed_df = day_df[day_df['Durum'] == 'Tamamlandı']
+            avg_time = 0
+            pallet_time_ratio = 0
+            
+            if not completed_df.empty:
+                try:
+                    time_values = completed_df['Süre (dk)'].replace('', 0).astype(float)
+                    valid_times = time_values[time_values > 0]
+                    if not valid_times.empty:
+                        avg_time = valid_times.mean()
+                        
+                        # Palet başına süre (sadece palet sayısı olan işlemler için)
+                        pallet_df = completed_df[completed_df['Palet Sayısı'].replace('', 0).astype(float) > 0]
+                        if not pallet_df.empty:
+                            total_time = pallet_df['Süre (dk)'].replace('', 0).astype(float).sum()
+                            total_pallets_completed = pallet_df['Palet Sayısı'].replace('', 0).astype(float).sum()
+                            if total_pallets_completed > 0:
+                                pallet_time_ratio = total_time / total_pallets_completed
+                            else:
+                                pallet_time_ratio = 0
+                except:
+                    pass
+            
+            daily_stats.append({
+                'Tarih': date,
+                'Araç Sayısı': vehicle_count,
+                'Tamamlanan': completed_count,
+                'Toplam Palet': total_pallets,
+                'Ortalama Süre': round(avg_time, 1),
+                'Palet Başına Süre': round(pallet_time_ratio, 1)
+            })
+        
+        return pd.DataFrame(daily_stats)
+    
+    except Exception as e:
+        st.error(f"İstatistik hesaplanırken hata: {e}")
+        return pd.DataFrame()
+
+def render_vehicle_count_chart(daily_stats):
+    """Günlük araç sayısı grafiği"""
+    import plotly.express as px
+    
+    fig = px.bar(
+        daily_stats, 
+        x='Tarih', 
+        y='Araç Sayısı',
+        title='📅 Günlük Araç Sayısı',
+        labels={'Araç Sayısı': 'Araç Sayısı', 'Tarih': 'Tarih'}
+    )
+    
+    fig.update_layout(
+        showlegend=False,
+        height=400,
+        xaxis_title="Tarih",
+        yaxis_title="Araç Sayısı"
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
+    
+    # Özet istatistikler
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("📊 Günlük Ortalama", f"{daily_stats['Araç Sayısı'].mean():.1f}")
+    with col2:
+        st.metric("📈 En Yoğun Gün", f"{daily_stats['Araç Sayısı'].max()}")
+    with col3:
+        st.metric("📉 En Sakin Gün", f"{daily_stats['Araç Sayısı'].min()}")
+
+def render_pallet_time_chart(daily_stats):
+    """Palet başına süre analizi grafiği"""
+    import plotly.graph_objects as go
+    from plotly.subplots import make_subplots
+    
+    # İki eksenli grafik
+    fig = make_subplots(
+        specs=[[{"secondary_y": True}]],
+        subplot_titles=("Palet Sayısı ve Palet Başına Süre Analizi",)
+    )
+    
+    # Palet sayısı (sol eksen)
+    fig.add_trace(
+        go.Bar(
+            x=daily_stats['Tarih'],
+            y=daily_stats['Toplam Palet'],
+            name="Toplam Palet",
+            marker_color='lightblue'
+        ),
+        secondary_y=False,
+    )
+    
+    # Palet başına süre (sağ eksen)
+    fig.add_trace(
+        go.Scatter(
+            x=daily_stats['Tarih'],
+            y=daily_stats['Palet Başına Süre'],
+            mode='lines+markers',
+            name="Palet Başına Süre (dk)",
+            line=dict(color='red', width=3),
+            marker=dict(size=8)
+        ),
+        secondary_y=True,
+    )
+    
+    # Eksen başlıkları
+    fig.update_xaxes(title_text="Tarih")
+    fig.update_yaxes(title_text="Toplam Palet Sayısı", secondary_y=False)
+    fig.update_yaxes(title_text="Palet Başına Süre (dk)", secondary_y=True)
+    
+    fig.update_layout(height=400)
+    
+    st.plotly_chart(fig, use_container_width=True)
+    
+    # Özet metrikler
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        avg_pallet_time = daily_stats['Palet Başına Süre'][daily_stats['Palet Başına Süre'] > 0].mean()
+        st.metric("⏱️ Ortalama Palet Süresi", f"{avg_pallet_time:.1f} dk")
+    with col2:
+        total_pallets = daily_stats['Toplam Palet'].sum()
+        st.metric("📦 Toplam Palet", f"{total_pallets:.0f}")
+    with col3:
+        best_day = daily_stats.loc[daily_stats['Palet Başına Süre'].idxmin(), 'Palet Başına Süre'] if not daily_stats.empty else 0
+        st.metric("🏆 En İyi Performans", f"{best_day:.1f} dk/palet")
+
+def render_ramp_distribution_chart(df):
+    """Rampa dağılımı grafiği"""
+    import plotly.express as px
+    
+    ramp_counts = df['Rampa'].value_counts()
+    
+    fig = px.pie(
+        values=ramp_counts.values,
+        names=ramp_counts.index,
+        title='🏗️ Rampa Kullanım Dağılımı'
+    )
+    
+    fig.update_layout(height=400)
+    st.plotly_chart(fig, use_container_width=True)
+
+def render_performance_trend_chart(daily_stats):
+    """Performans trendi grafiği"""
+    import plotly.graph_objects as go
+    
+    fig = go.Figure()
+    
+    # Ortalama süre trendi
+    fig.add_trace(go.Scatter(
+        x=daily_stats['Tarih'],
+        y=daily_stats['Ortalama Süre'],
+        mode='lines+markers',
+        name='Ortalama Süre (dk)',
+        line=dict(color='blue', width=2)
+    ))
+    
+    # Palet başına süre trendi
+    fig.add_trace(go.Scatter(
+        x=daily_stats['Tarih'],
+        y=daily_stats['Palet Başına Süre'],
+        mode='lines+markers',
+        name='Palet Başına Süre (dk)',
+        line=dict(color='green', width=2)
+    ))
+    
+    fig.update_layout(
+        title='📈 Performans Trendi',
+        xaxis_title='Tarih',
+        yaxis_title='Süre (dakika)',
+        height=400
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
+
+# Ana uygulama fonksiyonuna dashboard seçeneği ekleyin
+def render_action_buttons():
+    """Ana butonlar - Dashboard butonunu ekleyin"""
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        if st.button("📦 Yeni İşlem", key="btn_new", type="primary", use_container_width=True):
+            st.session_state.selected_tab = 'Yeni İşlem'
+            st.rerun()
+    
+    with col2:
+        df = load_operations()
+        aktif_count = len(df[df["Durum"] == "Aktif"]) if not df.empty else 0
+        if st.button(f"🔄 Aktif Yüklemeler ({aktif_count})", key="btn_active", use_container_width=True):
+            st.session_state.selected_tab = 'Aktif Yüklemeler'
+            st.rerun()
+    
+    with col3:
+        if st.button("📋 Tüm İşlemler", key="btn_all", use_container_width=True):
+            st.session_state.selected_tab = 'Tüm İşlemler'
+            st.rerun()
+    
+    with col4:
+        if st.button("📊 İstatistikler", key="btn_dashboard", use_container_width=True):
+            st.session_state.selected_tab = 'İstatistikler'
+            st.rerun()
+
 # --- Ana Uygulama ---
 def main():
     # Kimlik doğrulama kontrolü
@@ -1044,7 +1343,9 @@ def main():
         render_completed_operations()
     elif st.session_state.selected_tab == "Tüm İşlemler":
         render_all_operations()
-    
+    elif st.session_state.selected_tab == "İstatistikler":
+        render_dashboard()
+
     # Footer
     st.markdown("---")
     st.markdown("""

@@ -5,3 +5,4 @@ google-auth-httplib2>=0.1.0
 google-api-python-client>=2.88.0
 pandas>=1.5.0
 pytz>=2023.3
+plotly==5.15.0
