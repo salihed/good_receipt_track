@@ -940,12 +940,6 @@ def render_all_operations():
     col1, col2 = st.columns([3, 1])
     with col1:
         view_mode = st.selectbox(
-            "Görünüm:",
-            ["Kart Görünümü", "Tablo Görünümü"],
-            key="view_mode"
-        )
-    with col2:
-        show_count = st.selectbox(
             "Göster:",
             [50, 100, 200, "Tümü"],
             key="show_count"
@@ -957,67 +951,26 @@ def render_all_operations():
     else:
         display_df = all_df
     
-    if view_mode == "Tablo Görünümü":
-        # Tablo görünümü
-        st.dataframe(
-            display_df[["ID", "Teslimat", "Rampa", "Araç Plakası", "Şoför","Palet Sayısı", "Başlama Zamanı", "Bitiş Zamanı", "Durum", "Süre (dk)"]],
-            use_container_width=True,
-            hide_index=True,
-            column_config={
-                "ID": st.column_config.NumberColumn("ID", width="small"),
-                "Teslimat": st.column_config.TextColumn("Teslimat", width="medium"),
-                "Rampa": st.column_config.TextColumn("Rampa", width="medium"),
-                "Araç Plakası": st.column_config.TextColumn("Plaka", width="medium"),
-                "Şoför": st.column_config.TextColumn("Şoför", width="medium"),
-                "Palet Sayısı":st.column_config.TextColumn("Palet Sayısı", width="medium"),
-                "Başlama Zamanı": st.column_config.DatetimeColumn("Başlama", width="medium"),
-                "Bitiş Zamanı": st.column_config.DatetimeColumn("Bitiş", width="medium"),
-                "Durum": st.column_config.TextColumn("Durum", width="small"),
-                "Süre (dk)": st.column_config.NumberColumn("Süre", width="small")
-            }
-        )
-    else:
-        # Kart görünümü
-        for idx, row in display_df.iterrows():
-            status_icon = "🔄" if row["Durum"] == "Aktif" else "✅"
-            card_class = "active-loading" if row["Durum"] == "Aktif" else "completed-loading"
-            
-            with st.expander(
-                f"{status_icon} **ID: {row['ID']}** | {row['Rampa']} | {row['Araç Plakası']} | {row['Durum']}", 
-                expanded=False
-            ):
-                col1, col2, col3 = st.columns([2, 2, 1])
-                
-                with col1:
-                    st.markdown(f"**🏷️ Teslimat:** `{row['Teslimat']}`")
-                    st.markdown(f"**👤 Şoför:** {row['Şoför']}")
-                    st.markdown(f"**⏰ Başlama:** {row['Başlama Zamanı']}")
-                    if row['Bitiş Zamanı']:
-                        st.markdown(f"**🏁 Bitiş:** {row['Bitiş Zamanı']}")
-                
-                with col2:
-                    st.markdown(f"**🏗️ Rampa:** {row['Rampa']}")
-                    st.markdown(f"**👨‍💼 İşlem Yapan:** {row['İşlem Yapan'].split('@')[0]}")
-                    if row['Süre (dk)']:
-                        st.markdown(f"**⏱️ Süre:** {row['Süre (dk)']} dakika")
-                    if row['Palet Sayısı']:
-                        st.markdown(f"**📦 Palet Sayısı:** {row['Palet Sayısı']}")
-                
-                with col3:
-                    # Durum göstergesi
-                    if row["Durum"] == "Aktif":
-                        if st.button(
-                            "✅ Tamamla", 
-                            key=f"complete_all_{row['ID']}_{idx}", 
-                            type="primary",
-                            use_container_width=True
-                        ):
-                            complete_loading(row['ID'])
-                    else:
-                        st.success("Tamamlandı")
-            
-            st.divider()
-    
+
+    st.dataframe(
+        display_df[["ID", "Teslimat", "Rampa", "Araç Plakası", "Şoför","Palet Sayısı", "Başlama Zamanı", "Bitiş Zamanı", "Durum", "Süre (dk)"]],
+        use_container_width=True,
+        hide_index=True,
+        column_config={
+            "ID": st.column_config.NumberColumn("ID", width="small"),
+            "Teslimat": st.column_config.TextColumn("Teslimat", width="medium"),
+            "Rampa": st.column_config.TextColumn("Rampa", width="medium"),
+            "Araç Plakası": st.column_config.TextColumn("Plaka", width="medium"),
+            "Şoför": st.column_config.TextColumn("Şoför", width="medium"),
+            "Palet Sayısı":st.column_config.TextColumn("Palet Sayısı", width="medium"),
+            "Başlama Zamanı": st.column_config.DatetimeColumn("Başlama", width="medium"),
+            "Bitiş Zamanı": st.column_config.DatetimeColumn("Bitiş", width="medium"),
+            "Durum": st.column_config.TextColumn("Durum", width="small"),
+            "İşlem Yapan": st.column_config.TextColumn("İşlem Yapan", width="medium"),
+            "Süre (dk)": st.column_config.NumberColumn("Süre", width="small")
+        }
+    )
+ 
     # Sayfa altında özet
     if len(all_df) > len(display_df):
         st.info(f"📊 Toplam {len(all_df)} işlemden {len(display_df)} tanesi gösteriliyor.")
