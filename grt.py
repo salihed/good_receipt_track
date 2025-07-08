@@ -936,14 +936,12 @@ def render_all_operations():
         st.info("📭 Kayıtlı işlem bulunmuyor.")
         return
     
-    # Görünüm seçenekleri
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        view_mode = st.selectbox(
-            "Göster:",
-            [50, 100, 200, "Tümü"],
-            key="show_count"
-        )
+    # Kayıt sayısı seçimi
+    show_count = st.selectbox(
+        "Göster:",
+        [50, 100, 200, "Tümü"],
+        key="show_count"
+    )
     
     # Kayıt sayısını sınırla
     if show_count != "Tümü":
